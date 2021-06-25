@@ -9,9 +9,18 @@ namespace NetworkTranslate
 {
     public class IPTranslate
     {
+        /// <summary>
+        /// 以无符号整数表示的IP地址
+        /// </summary>
         UInt32 ipIntAddress;
+        /// <summary>
+        /// 以无符号整数表示的子网掩码
+        /// </summary>
         UInt32 ipIntNetmask;
-
+        /// <summary>
+        /// 核心的解析，最终为ipIntAddress、ipIntNetmask设置值
+        /// </summary>
+        /// <param name="ipWithNetmask"></param>
         public void Parse(string ipWithNetmask)
         {
             //111.9.11.128/25
@@ -29,7 +38,6 @@ namespace NetworkTranslate
                     {
                         ipIntNetmask = SetBit(int.Parse(tempIP[1]));
                     }
-
                     //118.113.96.0/255.254.253.0
                     else
                     {
@@ -44,6 +52,7 @@ namespace NetworkTranslate
             }
 
             //110.191.249.2-110.191.249.126
+            //此类计算，不准确，会出现错误！不建议使用！
             if (ipWithNetmask.Contains('-'))
             {
                 var tempIP = ipWithNetmask.Split(new char[] { '-', ' ' }, StringSplitOptions.RemoveEmptyEntries);
@@ -105,7 +114,10 @@ namespace NetworkTranslate
         /// 广播地址
         /// </summary>
         public string IPBroadcast => Int2IP((ipIntAddress & ipIntNetmask) | ~ipIntNetmask);
-
+        /// <summary>
+        /// 序列化
+        /// </summary>
+        /// <returns></returns>
         public override string ToString()
         {
             var obj = new { IPCount, IPAddress, NetMask, NetMaksLength, Network, IPAddressFirst, IPAddressLast, IPBroadcast };
@@ -121,7 +133,6 @@ namespace NetworkTranslate
             var ips = ip.Split('.');
             return (UInt32.Parse(ips[0]) << 24 | UInt32.Parse(ips[1]) << 16 | UInt32.Parse(ips[2]) << 8 | UInt32.Parse(ips[3]));
         }
-
         /// <summary>
         /// 将IP地址转换为无符号整数
         /// </summary>
@@ -131,7 +142,6 @@ namespace NetworkTranslate
         {
             return (ipInt >> 24) + "." + ((ipInt >> 16) & 0xFF) + "." + ((ipInt >> 8) & 0xFF) + "." + ((ipInt) & 0xFF);
         }
-
         /// <summary>
         /// 设置子网掩码
         /// </summary>
@@ -144,34 +154,14 @@ namespace NetworkTranslate
             {
                 ipInt >>= 1;
                 ipInt |= 1U << 31;
-
             }
             return ipInt;
         }
-
         /// <summary>
-        /// 将字符串的子网掩码转换成数字
+        /// 将以掩码位表示的子网掩码转换成数字
         /// </summary>
-        /// <param name="netmask"></param>
+        /// <param name="mask"></param>
         /// <returns></returns>
-        int GetMaskBits(string netmask)
-        {
-            int ipInt = 0;
-            var mask = IP2Int(netmask);
-            for (int i = 0; i < 32; i++)
-            {
-                if ((mask & (1U << 31)) == 0) break;
-
-                ipInt++;
-                mask <<= 1;
-            }
-            if (mask != 0)
-            {
-                throw new Exception(netmask + " 不是一个合法的子网掩码！");
-            }
-            return ipInt;
-        }
-
         int GetMaskBits(UInt32 mask)
         {
             int ipInt = 0;
